@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#232b32">
+    <meta
+      name="description"
+      content="A Numbrix solver you can watch, one step at a time."
+    >
+    <title>Numbrix</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#boardHeading">Skip to puzzle grid</a>
+
+    <main id="top">
+      <article>
+        <header class="app-header">
+          <h1 id="pageTitle">Numbrix</h1>
+          <p class="rules">Fill the grid so the numbers run in one unbroken path, each step going up, down, left or right.</p>
+        </header>
+
+        <section id="interactive" class="interactive-section" aria-labelledby="pageTitle">
+          <div id="app" class="explainer-shell">
+            <section class="control-strip" aria-labelledby="setupHeading">
+              <h2 id="setupHeading" class="visually-hidden">Puzzle controls</h2>
+
+              <div class="control-field size-field">
+                <label for="boardSizeSelect">Size</label>
+                <select id="boardSizeSelect" aria-describedby="sizeHint">
+                  <option value="3">3 × 3</option><option value="4">4 × 4</option>
+                  <option value="5" selected>5 × 5</option><option value="6">6 × 6</option>
+                  <option value="7">7 × 7</option><option value="8">8 × 8</option>
+                  <option value="9">9 × 9</option><option value="10">10 × 10</option>
+                  <option value="11">11 × 11</option><option value="12">12 × 12</option>
+                  <option value="13">13 × 13</option><option value="14">14 × 14</option>
+                  <option value="15">15 × 15</option>
+                </select>
+                <span id="sizeHint" class="visually-hidden">Square boards from 3 by 3 to 15 by 15.</span>
+              </div>
+
+              <div class="control-field example-field">
+                <label for="presetSelect">Example</label>
+                <div class="joined-control">
+                  <select id="presetSelect"><option value="">Choose an example…</option></select>
+                  <button id="loadPresetBtn" class="button button-secondary" type="button">Load</button>
+                </div>
+                <span id="presetDescription" class="control-help" aria-live="polite"></span>
+              </div>
+
+              <div class="control-actions" aria-label="Puzzle actions">
+                <button id="pastePuzzleBtn" class="button button-quiet" type="button">Paste grid</button>
+                <button id="clearBoardBtn" class="button button-quiet" type="button">Clear</button>
+                <button id="solveBtn" class="button button-primary" type="button">
+                  Solve
+                </button>
+                <button id="cancelBtn" class="button button-danger" type="button" disabled>Cancel</button>
+              </div>
+
+              <details class="advanced-settings">
+                <summary>Search settings</summary>
+                <div class="settings-popover">
+                  <label class="toggle-row" for="uniquenessToggle">
+                    <span><strong>Check uniqueness</strong><small>Keep searching after the first solution.</small></span>
+                    <input id="uniquenessToggle" type="checkbox">
+                  </label>
+                  <label for="maxNodesInput">Maximum nodes
+                    <input id="maxNodesInput" type="number" min="1" max="100000000" step="10000" value="2000000" inputmode="numeric">
+                  </label>
+                  <label for="maxTimeInput">Time limit (seconds)
+                    <input id="maxTimeInput" type="number" min="0.1" max="300" step="0.1" value="10" inputmode="decimal">
+                  </label>
+                  <label for="maxTraceInput">Recorded events
+                    <input id="maxTraceInput" type="number" min="0" max="1000000" step="1000" value="20000" inputmode="numeric">
+                  </label>
+                </div>
+              </details>
+            </section>
+
+            <section id="resultPanel" class="status-strip" aria-labelledby="resultHeading">
+              <div>
+                <h3 id="resultHeading" class="visually-hidden">Solver status</h3>
+                <p id="statusMessage" class="status-message" role="status" aria-live="polite">Type some clues, or pick an example.</p>
+                <p id="statusDetail" class="status-detail"></p>
+                <div id="inputError" class="inline-alert" role="alert" hidden></div>
+              </div>
+              <span id="statusBadge" class="status-badge" data-status="idle">Idle</span>
+              <div id="resultActions" class="result-actions" hidden>
+                <button id="showSolutionBtn" class="text-button" type="button" aria-pressed="true">Solution</button>
+                <button id="replayTraceBtn" class="text-button" type="button" aria-pressed="false">Replay search</button>
+                <button id="copySolutionBtn" class="text-button" type="button">Copy grid</button>
+              </div>
+            </section>
+
+            <div class="synchronized-view">
+              <section class="diagram-column" aria-labelledby="boardHeading">
+                <div class="diagram-heading panel-heading">
+                  <h2 id="boardHeading" class="visually-hidden" tabindex="-1">Puzzle grid</h2>
+                  <span id="boardModeLabel" class="board-mode">Editing clues</span>
+                </div>
+                <p id="boardInstructions" class="board-instructions visually-hidden">
+                  Type clue values from 1 to 81. Use the arrow keys to move between cells.
+                </p>
+
+                <div id="boardViewport" class="board-viewport" tabindex="0" aria-label="Scrollable puzzle board">
+                  <div id="boardGrid" class="board-grid" role="grid" aria-labelledby="boardHeading" aria-describedby="boardInstructions"></div>
+                </div>
+
+                <section id="explanationPanel" class="event-log" aria-live="polite" aria-atomic="true">
+                  <div class="event-log-heading">
+                    <h3 class="visually-hidden">Current step</h3>
+                    <span id="traceKindBadge" class="event-badge" data-kind="none">No trace</span>
+                  </div>
+                  <p id="algorithmExplanation"></p>
+                  <p id="traceDetail" class="trace-detail"></p>
+                </section>
+
+                <section id="tracePanel" class="playback" aria-labelledby="traceHeading">
+                  <div class="playback-title">
+                    <h3 id="traceHeading" class="visually-hidden">Replay</h3>
+                  </div>
+                  <div class="transport" aria-label="Trace playback controls">
+                    <button id="traceFirstBtn" class="icon-button" type="button" disabled aria-label="First frame"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 4v12m10-11-7 5 7 5z"></path></svg></button>
+                    <button id="tracePreviousBtn" class="icon-button" type="button" disabled aria-label="Previous frame"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m13 5-7 5 7 5z"></path></svg></button>
+                    <button id="tracePlayBtn" class="icon-button play-button" type="button" disabled aria-label="Play trace"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m7 4 8 6-8 6z"></path></svg></button>
+                    <button id="tracePauseBtn" class="icon-button play-button" type="button" disabled hidden aria-label="Pause trace"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M6 4h3v12H6zm5 0h3v12h-3z"></path></svg></button>
+                    <button id="traceNextBtn" class="icon-button" type="button" disabled aria-label="Next frame"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m7 5 7 5-7 5z"></path></svg></button>
+                    <button id="traceLastBtn" class="icon-button" type="button" disabled aria-label="Last frame"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M15 4v12M5 5l7 5-7 5z"></path></svg></button>
+                  </div>
+                  <div class="timeline-field">
+                    <label class="visually-hidden" for="traceScrubber">Frame</label>
+                    <input id="traceScrubber" type="range" min="0" max="0" value="0" disabled>
+                    <output id="traceCounter" for="traceScrubber">0 of 0</output>
+                  </div>
+                  <details class="playback-options">
+                    <summary>Display options</summary>
+                    <div class="option-grid">
+                      <label for="traceSpeed">Speed <input id="traceSpeed" type="range" min="1" max="30" value="8"></label>
+                      <output id="traceSpeedValue" for="traceSpeed">8 frames/sec</output>
+                      <fieldset class="layer-options">
+                        <legend>Visible states</legend>
+                        <label><input id="showForcedToggle" type="checkbox" checked> Forced</label>
+                        <label><input id="showDecisionsToggle" type="checkbox" checked> Guesses</label>
+                        <label><input id="showRejectedToggle" type="checkbox" checked> Undone</label>
+                        <label><input id="showSolutionToggle" type="checkbox" checked> Solution</label>
+                      </fieldset>
+                    </div>
+                  </details>
+                  <p id="traceTruncated" class="trace-warning" hidden>The recording stopped early. The result is still exact.</p>
+                </section>
+
+                <details class="trace-legend">
+                  <summary>Key</summary>
+                  <div class="inline-legend" aria-label="Board state legend">
+                    <span><i class="legend-swatch given-swatch"></i> clue</span>
+                    <span><i class="legend-swatch forced-swatch"></i> forced</span>
+                    <span><i class="legend-swatch decision-swatch"></i> guess</span>
+                    <span><i class="legend-swatch rejected-swatch"></i> undone</span>
+                    <span><i class="legend-swatch candidate-swatch"></i> could go here</span>
+                    <span><i class="legend-swatch removed-swatch"></i> candidate removed</span>
+                    <span><i class="legend-swatch restored-swatch"></i> candidate restored</span>
+                  </div>
+                </details>
+
+              </section>
+
+              <aside class="algorithm-column" aria-labelledby="traceViewerHeading">
+                <h2 id="traceViewerHeading" class="visually-hidden">Trace viewer</h2>
+
+                <div class="inspector-panels">
+                  <details class="inspector-details counts-inspector">
+                    <summary>
+                      <span class="inspector-name">Counts</span>
+                    </summary>
+                    <section class="metrics-panel structure-card" aria-labelledby="metricsHeading">
+                      <h3 id="metricsHeading" class="visually-hidden">Counts</h3>
+                      <dl class="metrics-row">
+                        <div><dt>candidates tried</dt><dd id="nodesMetric">0</dd></div>
+                        <div><dt>forced placements</dt><dd id="forcedMetric">0</dd></div>
+                        <div><dt>solutions found</dt><dd id="solutionsMetric">0</dd></div>
+                        <div><dt>backtracks</dt><dd id="backtracksMetric">0</dd></div>
+                        <div><dt>max depth</dt><dd id="depthMetric">0</dd></div>
+                        <div><dt>elapsed</dt><dd id="elapsedMetric">0 ms</dd></div>
+                        <div><dt>events kept</dt><dd id="traceEventsMetric">0</dd></div>
+                      </dl>
+                    </section>
+                  </details>
+                  <details class="inspector-details domain-inspector">
+                    <summary>
+                      <span class="inspector-name">Domains</span>
+                      <span id="domainSummary" class="inspector-state">No value selected</span>
+                    </summary>
+                    <section class="structure-card domain-card" aria-labelledby="domainHeading">
+                      <h3 id="domainHeading">Candidate cells</h3>
+                      <div id="domainCandidates" class="candidate-list empty-structure">
+                        <span>Candidate squares will appear here.</span>
+                      </div>
+                      <div id="domainDeltas" class="delta-list" role="status" aria-live="polite" aria-label="Recent domain candidate changes"></div>
+                    </section>
+                  </details>
+
+                  <details class="inspector-details algorithm-inspector">
+                    <summary>
+                      <span class="inspector-name">Algorithm</span>
+                      <span id="algorithmPhase" class="phase-label inspector-state" data-phase="ready">Ready</span>
+                    </summary>
+                    <section class="algorithm-card" aria-labelledby="algorithmHeading">
+                      <h3 id="algorithmHeading">Pseudocode</h3>
+                      <ol id="algorithmCode" class="pseudocode" aria-label="Solver pseudocode">
+                        <li data-code-line="seed-candidate-domains"><code>domains ← possible cells for each value</code></li>
+                        <li data-code-line="propagate-singleton-values"><code><b>repeat</b>: fix values with one cell</code></li>
+                        <li data-code-line="propagate-singleton-cells"><code>&nbsp;&nbsp;fix cells claimed by one value</code></li>
+                        <li data-code-line="prune-adjacency-support"><code>&nbsp;&nbsp;prune cells without ±1 support</code></li>
+                        <li data-code-line="check-path-degree"><code>&nbsp;&nbsp;check path degree constraints</code></li>
+                        <li data-code-line="check-segment-connectivity"><code>&nbsp;&nbsp;check fixed segments connect</code></li>
+                        <li data-code-line="select-minimum-domain"><code>value ← smallest remaining domain</code></li>
+                        <li data-code-line="assign-candidate"><code><b>try</b> one candidate cell; recurse</code></li>
+                        <li data-code-line="rollback-trail"><code><b>undo</b> the branch if it fails</code></li>
+                        <li data-code-line="verify-complete-board"><code>check every consecutive edge</code></li>
+                        <li data-code-line="trace-cap-reached"><code>cap recording; keep solving</code></li>
+                        <li data-code-line="report-search-result"><code>report result</code></li>
+                      </ol>
+                    </section>
+                  </details>
+
+                  <details class="inspector-details structure-inspector">
+                    <summary>
+                      <span class="inspector-name">Structure</span>
+                    </summary>
+                    <div class="structure-grid">
+                      <section class="structure-card stack-card" aria-labelledby="stackHeading">
+                        <div class="structure-heading">
+                          <h3 id="stackHeading">Decision stack</h3>
+                          
+                        </div>
+                        <ol id="decisionStack" class="stack-list empty-structure">
+                          <li>No guesses yet</li>
+                        </ol>
+                      </section>
+
+                      <section class="structure-card scan-card" aria-labelledby="scanHeading">
+                        <div class="structure-heading">
+                          <h3 id="scanHeading">Propagation counters</h3>
+                          
+                        </div>
+                        <dl id="propagationScan" class="scan-list empty-structure">
+                          <div><dt>passes</dt><dd>0</dd></div>
+                          <div><dt>value singletons</dt><dd>0</dd></div>
+                          <div><dt>cell singletons</dt><dd>0</dd></div>
+                          <div><dt>adjacency checks</dt><dd>0</dd></div>
+                          <div><dt>segments checked</dt><dd>0</dd></div>
+                        </dl>
+                      </section>
+                    </div>
+                  </details>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </main>
+
+    <dialog id="pasteDialog" class="paste-dialog" aria-labelledby="pasteDialogHeading">
+      <form id="pasteForm" method="dialog">
+        <div class="dialog-heading">
+          <h2 id="pasteDialogHeading">Paste a puzzle</h2>
+          <button id="closePasteBtn" class="icon-button" type="button" aria-label="Close paste dialog"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 5 10 10m0-10L5 15"></path></svg></button>
+        </div>
+        <p id="pasteHelp">One row per line. Use 0 or . for a blank.</p>
+        <label for="pasteText">Puzzle values</label>
+        <textarea id="pasteText" rows="9" spellcheck="false" placeholder="1, 0, 0, 4&#10;0, 0, 0, 0&#10;…" aria-describedby="pasteHelp pasteError"></textarea>
+        <p id="pasteError" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="cancelPasteBtn" class="button button-quiet" type="button">Cancel</button>
+          <button id="applyPasteBtn" class="button button-primary" type="submit">Apply grid</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
