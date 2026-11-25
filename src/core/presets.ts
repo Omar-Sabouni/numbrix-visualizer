@@ -55,7 +55,7 @@ function createBacktrackingLabPreset(): PuzzlePreset {
   return {
     id: "s5-backtracking-lab",
     label: "Backtracking example",
-    description: "The solver makes one wrong guess on this puzzle before it finds the solution.",
+    description: "",
     size: 5,
     cells: Int16Array.from([
       0, 0, 0, 0, 1,
