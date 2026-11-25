@@ -1060,7 +1060,7 @@ export function solvePuzzle(puzzle: Puzzle, options?: SolveOptions): SolveResult
       {
         phase: "finish",
         codeLine: "report-search-result",
-        reasonDetail: status === "solved" ? "Done. The grid is complete." : `Stopped: ${resolvedStopReason.replaceAll("-", " ")}.`,
+        reasonDetail: status === "solved" ? "The grid is complete." : `The search stopped early (${resolvedStopReason.replaceAll("-", " ")}).`,
       },
       { reason: resolvedStopReason, board: terminalBoard },
       true,

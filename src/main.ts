@@ -208,17 +208,13 @@ function statesForFrame(event: TraceEvent, board: Int16Array): CellVisualState[]
 }
 
 function formatTraceDetail(event: TraceEvent): string {
-  const fields = [
-    `step ${event.step + 1}`,
-    event.kind.replaceAll("-", " "),
-    `depth ${event.depth}`,
-  ];
-  if (event.value !== undefined) fields.push(`value ${event.value}`);
-  if (event.cell !== undefined) {
-    fields.push(`r${Math.floor(event.cell / puzzle.size) + 1} c${(event.cell % puzzle.size) + 1}`);
+  let detail = `Step ${event.step + 1} is at search depth ${event.depth}`;
+  if (event.value !== undefined && event.cell !== undefined) {
+    detail += ` and involves ${event.value} at row ${Math.floor(event.cell / puzzle.size) + 1}, column ${(event.cell % puzzle.size) + 1}`;
+  } else if (event.value !== undefined) {
+    detail += ` and involves ${event.value}`;
   }
-  fields.push(event.explainer.codeLine.replaceAll("-", " "));
-  return fields.join(" · ");
+  return `${detail}.`;
 }
 
 function presentTraceMetadata(event: TraceEvent, index: number): void {
