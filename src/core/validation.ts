@@ -127,7 +127,7 @@ export function validatePuzzle(puzzle: Puzzle): ValidationResult {
       } else if (((steps - distance) & 1) !== 0) {
         errors.push({
           code: "clue-parity",
-          message: `Clues ${left.value} and ${right.value} violate grid parity.`,
+          message: `Clues ${left.value} and ${right.value} can't connect: a ${steps}-step path can't join cells ${distance} steps apart.`,
           cells: [left.cell, right.cell],
           values: [left.value, right.value],
         });
@@ -165,7 +165,7 @@ export function validatePuzzle(puzzle: Puzzle): ValidationResult {
     if (!feasible) {
       errors.push({
         code: "clue-neighbors",
-        message: `Clue ${clue.value} does not have feasible consecutive neighbor cells.`,
+        message: `Clue ${clue.value} has no free neighboring cell for ${[clue.value > 1 ? clue.value - 1 : null, clue.value < total ? clue.value + 1 : null].filter((value) => value !== null).join(" or ")}.`,
         cells: [clue.cell],
         values: [clue.value],
       });

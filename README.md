@@ -19,7 +19,7 @@ Choose an example, enter clues directly, or paste a whitespace- or
 comma-separated grid. Empty cells may be written as `0` or `.`. The arrow keys
 move between cells.
 
-Select **Solve & record** to find a completion and record the search. The
+Select **Solve** to find a completion and record the search. The
 transport steps through the board changes; the optional panels show candidate
 domains, the active pseudocode line, propagation counters, and the decision
 stack. **Solution** returns to the completed board, and **Copy grid** copies it

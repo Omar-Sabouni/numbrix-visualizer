@@ -93,7 +93,7 @@ test.describe("Numbrix explorable explanation", () => {
     const inspectors = [
       { selector: ".domain-inspector", heading: "Candidate cells" },
       { selector: ".algorithm-inspector", heading: "Pseudocode" },
-      { selector: ".structure-inspector", heading: "Decision stack" },
+      { selector: ".structure-inspector", heading: "Guess stack" },
     ] as const;
     for (const inspector of inspectors) {
       const details = page.locator(inspector.selector);

@@ -743,8 +743,8 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
       mode === "edit"
         ? `Type clue values from 1 to ${currentSize * currentSize}. Use the arrow keys to move between cells.`
         : mode === "solution"
-          ? "The completed solution is shown. Choose Replay search to inspect solver states."
-          : "Use the trace controls below to move through genuine solver states.";
+          ? "Solved grid. Choose Replay search to step through the search."
+          : "Use the replay controls to step through the search.";
     setGridReadOnly(mode !== "edit");
   }
 
@@ -924,7 +924,7 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
           ? "Solved. Ran out of time checking for others."
           : "Ran out of time. Raise the limits in Search settings.";
       } else {
-        message = "Cancelled.";
+        message = "Solve cancelled.";
       }
     }
 
@@ -1025,7 +1025,7 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
       refs.domainSummary.textContent = "No value selected";
       refs.domainCandidates.classList.add("empty-structure");
       const empty = ownerDocument.createElement("span");
-      empty.textContent = "Candidate squares will appear here.";
+      empty.textContent = "Candidate cells will appear here.";
       refs.domainCandidates.append(empty);
       applyStateVisibility();
       return;
@@ -1037,7 +1037,7 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
 
     if (exactCount === 0) {
       const empty = ownerDocument.createElement("span");
-      empty.textContent = "Empty domain — this branch is contradictory.";
+      empty.textContent = "No cell is left for this value, so this guess fails.";
       refs.domainCandidates.append(empty);
       applyStateVisibility();
       return;
@@ -1165,7 +1165,7 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
   }
 
   function setExplanation(message: string): void {
-    refs.algorithmExplanation.textContent = message || "No explanation was recorded for this frame.";
+    refs.algorithmExplanation.textContent = message || "No note for this step.";
   }
 
   function setExplainerSnapshot(snapshot?: TraceExplainerSnapshot): void {
@@ -1397,7 +1397,6 @@ export function createNumbrixView(root: ParentNode = document): NumbrixView {
       emit("paste", parsed.puzzle);
       emit("puzzleChange", parsed.puzzle);
       setInputError();
-      showToast("Puzzle pasted into the grid.");
     },
     { signal },
   );
