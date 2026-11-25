@@ -331,7 +331,7 @@ const unsubscribe = view.on({
       hasSolution: false,
       hasTrace: false,
       message: "Solve cancelled.",
-      detail: "The puzzle is unchanged and ready to edit or solve again.",
+      detail: "",
     });
   },
   modeChange(mode) {
